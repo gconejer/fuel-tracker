@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c3e50">
-    <meta name="description" content="Gestor de consumo de combustible para mi coche">
-    <title>Fuel Tracker</title>
+    <meta name="description" content="Gestor de consumo de combustible para tu Audi A4 B8">
+    <title>Fuel Tracker - Audi A4 B8</title>
     <link rel="manifest" href="manifest.json">
     <style>
         * {
@@ -16,20 +16,18 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
             color: #333;
         }
 
         .container {
-            max-width: 500px;
-            margin: 0 auto;
+            width: 100%;
+            height: 100vh;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -72,7 +70,8 @@
         .content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* PANTALLA PRINCIPAL */
@@ -364,7 +363,7 @@
         <div class="header">
             <div>
                 <h1>⛽ Fuel Tracker</h1>
-                <div class="header-subtitle">Gestor de consumos</div>
+                <div class="header-subtitle">Audi A4 B8 2011</div>
             </div>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
@@ -379,12 +378,12 @@
 
                 <div class="form-group">
                     <label for="km">Km actuales</label>
-                    <input type="number" id="km" placeholder="45230" step="1">
+                    <input type="number" id="km" placeholder="--" step="1">
                 </div>
 
                 <div class="form-group">
                     <label for="litros">Litros repostados</label>
-                    <input type="number" id="litros" placeholder="55" step="0.1">
+                    <input type="number" id="litros" placeholder="45.5" step="0.1">
                 </div>
 
                 <div class="consumption-display empty" id="consumptionDisplay">
@@ -568,6 +567,17 @@
         function loadData() {
             const data = getAllData();
             displayHistory(data);
+            updateKmPlaceholder(data);
+        }
+
+        function updateKmPlaceholder(data) {
+            const kmInput = document.getElementById('km');
+            if (data.length > 0) {
+                const lastKm = data[data.length - 1].km;
+                kmInput.placeholder = lastKm;
+            } else {
+                kmInput.placeholder = '--';
+            }
         }
 
         // MOSTRAR HISTÓRICO
