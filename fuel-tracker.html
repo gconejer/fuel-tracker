@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="description" content="Gestor de consumo de combustible para tu Audi A4 B8">
+    <title>Fuel Tracker - Audi A4 B8</title>
+    <link rel="manifest" href="data:application/json,{\"name\":\"Fuel Tracker\",\"short_name\":\"Fuel\",\"start_url\":\"/\",\"display\":\"standalone\",\"background_color\":\"#fff\",\"theme_color\":\"#2c3e50\",\"icons\":[{\"src\":\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c3e50' width='192' height='192'/><text x='50%' y='50%' font-size='120' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>⛽</text></svg>\",\"sizes\":\"192x192\",\"type\":\"image/svg+xml\"}]}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* PANTALLA PRINCIPAL */
+        .main-screen {
+            display: none;
+        }
+
+        .main-screen.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .consumption-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .consumption-display.empty {
+            background: #e0e0e0;
+            color: #999;
+        }
+
+        .consumption-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .consumption-unit {
+            font-size: 14px;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        /* HISTÓRICO */
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-date {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .history-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .history-consumption {
+            font-weight: 600;
+            color: #667eea;
+            text-align: right;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+
+        /* PANTALLA CONFIGURACIÓN */
+        .settings-screen {
+            display: none;
+        }
+
+        .settings-screen.active {
+            display: block;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 18px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .settings-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* GRÁFICA */
+        .chart-container {
+            margin-bottom: 20px;
+        }
+
+        #consumptionChart {
+            width: 100%;
+            height: 300px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* RESPONSIVE */
+        @media (max-height: 700px) {
+            .container {
+                min-height: auto;
+            }
+
+            .content {
+                max-height: 70vh;
+            }
+
+            #consumptionChart {
+                height: 200px;
+            }
+        }
+
+        /* PWA */
+        @supports (display: standalone) {
+            body {
+                padding-top: 20px;
+            }
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            width: 100%;
+        }
+
+        .no-data-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>⛽ Fuel Tracker</h1>
+                <div class="header-subtitle">Audi A4 B8 2011</div>
+            </div>
+            <button class="settings-btn" id="settingsBtn">⚙️</button>
+        </div>
+
+        <div class="content">
+            <!-- PANTALLA PRINCIPAL -->
+            <div class="main-screen active" id="mainScreen">
+                <div class="form-group">
+                    <label for="fecha">Fecha</label>
+                    <input type="date" id="fecha" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="km">Km actuales</label>
+                    <input type="number" id="km" placeholder="45230" step="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="litros">Litros repostados</label>
+                    <input type="number" id="litros" placeholder="45.5" step="0.1">
+                </div>
+
+                <div class="consumption-display empty" id="consumptionDisplay">
+                    <div class="consumption-value" id="consumptionValue">-</div>
+                    <div class="consumption-unit">l/100km</div>
+                </div>
+
+                <button class="btn btn-primary" id="saveBtn">Guardar repostaje</button>
+
+                <!-- HISTÓRICO -->
+                <div class="history-section">
+                    <div class="history-title">Últimos repostajes</div>
+                    <ul class="history-list" id="historyList">
+                        <li class="empty-message">Sin repostajes aún</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PANTALLA CONFIGURACIÓN -->
+            <div class="settings-screen" id="settingsScreen">
+                <button class="back-btn" id="backBtn">← Atrás</button>
+
+                <!-- ESTADÍSTICAS -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📊 Estadísticas</div>
+                    <div id="statsContainer"></div>
+                </div>
+
+                <!-- IMPORTAR -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📥 Importar datos</div>
+                    <div class="file-input-wrapper">
+                        <label for="importFile" class="btn btn-secondary">Seleccionar archivo</label>
+                        <input type="file" id="importFile" accept=".json,.csv">
+                    </div>
+                    <button class="btn btn-secondary" id="importBtn">Cargar datos</button>
+                </div>
+
+                <!-- EXPORTAR -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📤 Exportar datos</div>
+                    <button class="btn btn-secondary" id="exportJsonBtn">Descargar JSON</button>
+                    <button class="btn btn-secondary" id="exportCsvBtn">Descargar CSV</button>
+                    <button class="btn btn-danger" id="clearBtn">Borrar todos los datos</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // CONSTANTES
+        const DB_KEY = 'fuelTrackerData';
+        const STORAGE_KEY = 'fuelTrackerItems';
+        let chart = null;
+
+        // INICIALIZACIÓN
+        function init() {
+            setCurrentDate();
+            loadData();
+            attachEventListeners();
+            registerServiceWorker();
+        }
+
+        function setCurrentDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fecha').value = today;
+        }
+
+        function attachEventListeners() {
+            // Botones navegación
+            document.getElementById('settingsBtn').addEventListener('click', showSettings);
+            document.getElementById('backBtn').addEventListener('click', showMain);
+
+            // Formulario
+            document.getElementById('km').addEventListener('input', calculateConsumption);
+            document.getElementById('litros').addEventListener('input', calculateConsumption);
+            document.getElementById('saveBtn').addEventListener('click', saveEntry);
+
+            // Importar/Exportar
+            document.getElementById('importFile').addEventListener('change', handleFileSelect);
+            document.getElementById('importBtn').addEventListener('click', importData);
+            document.getElementById('exportJsonBtn').addEventListener('click', () => exportData('json'));
+            document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
+            document.getElementById('clearBtn').addEventListener('click', clearAllData);
+        }
+
+        // CÁLCULO DE CONSUMO
+        function calculateConsumption() {
+            const km = parseFloat(document.getElementById('km').value);
+            const litros = parseFloat(document.getElementById('litros').value);
+
+            if (km && litros && km > 0 && litros > 0) {
+                const data = getAllData();
+                if (data.length === 0) {
+                    showConsumption(null);
+                    return;
+                }
+
+                const lastEntry = data[data.length - 1];
+                const kmDiff = km - lastEntry.km;
+
+                if (kmDiff <= 0) {
+                    showConsumption(null);
+                    return;
+                }
+
+                const consumo = (litros * 100) / kmDiff;
+                showConsumption(consumo);
+            } else {
+                showConsumption(null);
+            }
+        }
+
+        function showConsumption(value) {
+            const display = document.getElementById('consumptionDisplay');
+            const valueEl = document.getElementById('consumptionValue');
+
+            if (value !== null && !isNaN(value)) {
+                display.classList.remove('empty');
+                valueEl.textContent = value.toFixed(2);
+            } else {
+                display.classList.add('empty');
+                valueEl.textContent = '-';
+            }
+        }
+
+        // GUARDAR ENTRADA
+        function saveEntry() {
+            const fecha = document.getElementById('fecha').value;
+            const km = parseFloat(document.getElementById('km').value);
+            const litros = parseFloat(document.getElementById('litros').value);
+
+            if (!fecha || !km || !litros || km <= 0 || litros <= 0) {
+                alert('Por favor, rellena todos los campos correctamente');
+                return;
+            }
+
+            const data = getAllData();
+            let consumo = null;
+
+            if (data.length > 0) {
+                const lastEntry = data[data.length - 1];
+                const kmDiff = km - lastEntry.km;
+                if (kmDiff > 0) {
+                    consumo = (litros * 100) / kmDiff;
+                }
+            }
+
+            const entry = {
+                id: Date.now(),
+                fecha,
+                km,
+                litros,
+                consumo: consumo ? parseFloat(consumo.toFixed(2)) : null
+            };
+
+            data.push(entry);
+            saveData(data);
+
+            // Limpiar formulario
+            document.getElementById('km').value = '';
+            document.getElementById('litros').value = '';
+            setCurrentDate();
+            showConsumption(null);
+
+            loadData();
+            alert('Repostaje guardado ✓');
+        }
+
+        // DATOS - LOCALSTROAGE
+        function getAllData() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadData() {
+            const data = getAllData();
+            displayHistory(data);
+        }
+
+        // MOSTRAR HISTÓRICO
+        function displayHistory(data) {
+            const historyList = document.getElementById('historyList');
+
+            if (data.length === 0) {
+                historyList.innerHTML = '<li class="empty-message">Sin repostajes aún</li>';
+                return;
+            }
+
+            // Últimos 10 en orden inverso
+            const recent = data.slice(-10).reverse();
+            historyList.innerHTML = recent.map(entry => `
+                <li class="history-item">
+                    <div class="history-info">
+                        <div class="history-date">${formatDate(entry.fecha)}</div>
+                        <div class="history-details">${entry.km} km • ${entry.litros} L</div>
+                    </div>
+                    <div class="history-consumption">${entry.consumo ? entry.consumo.toFixed(2) + ' l/100km' : '-'}</div>
+                </li>
+            `).join('');
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // PANTALLA CONFIGURACIÓN
+        function showSettings() {
+            document.getElementById('mainScreen').classList.remove('active');
+            document.getElementById('settingsScreen').classList.add('active');
+            renderStats();
+        }
+
+        function showMain() {
+            document.getElementById('settingsScreen').classList.remove('active');
+            document.getElementById('mainScreen').classList.add('active');
+        }
+
+        // ESTADÍSTICAS
+        function renderStats() {
+            const data = getAllData();
+
+            if (data.length === 0) {
+                document.getElementById('statsContainer').innerHTML = '<div class="no-data-message">Sin datos aún</div>';
+                return;
+            }
+
+            // Calcular estadísticas
+            const consumos = data.filter(d => d.consumo !== null).map(d => d.consumo);
+            const promedio = consumos.length > 0 ? consumos.reduce((a, b) => a + b, 0) / consumos.length : 0;
+            const maximo = consumos.length > 0 ? Math.max(...consumos) : 0;
+            const minimo = consumos.length > 0 ? Math.min(...consumos) : 0;
+            const totalLitros = data.reduce((sum, d) => sum + d.litros, 0);
+            const totalKm = data[data.length - 1].km - data[0].km;
+            const totalRepostajes = data.length;
+
+            const statsHTML = `
+                <div class="chart-container">
+                    <canvas id="consumptionChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Consumo promedio</div>
+                        <div class="stat-value">${promedio.toFixed(2)} l/100km</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Consumo máximo</div>
+                        <div class="stat-value">${maximo.toFixed(2)} l/100km</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Consumo mínimo</div>
+                        <div class="stat-value">${minimo.toFixed(2)} l/100km</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total litros</div>
+                        <div class="stat-value">${totalLitros.toFixed(1)} L</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total km</div>
+                        <div class="stat-value">${totalKm}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Repostajes</div>
+                        <div class="stat-value">${totalRepostajes}</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('statsContainer').innerHTML = statsHTML;
+
+            // Renderizar gráfica
+            setTimeout(() => {
+                renderChart(data);
+            }, 100);
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('consumptionChart');
+            if (!ctx) return;
+
+            const chartData = data.filter(d => d.consumo !== null).map(d => ({
+                fecha: d.fecha,
+                consumo: d.consumo
+            }));
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => formatDate(d.fecha)),
+                    datasets: [{
+                        label: 'Consumo (l/100km)',
+                        data: chartData.map(d => d.consumo),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // IMPORTAR DATOS
+        let selectedFile = null;
+
+        function handleFileSelect(e) {
+            selectedFile = e.target.files[0];
+        }
+
+        function importData() {
+            if (!selectedFile) {
+                alert('Por favor, selecciona un archivo primero');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let data = [];
+
+                    if (selectedFile.name.endsWith('.json')) {
+                        data = JSON.parse(e.target.result);
+                    } else if (selectedFile.name.endsWith('.csv')) {
+                        data = parseCSV(e.target.result);
+                    } else {
+                        alert('Formato no soportado. Usa JSON o CSV');
+                        return;
+                    }
+
+                    if (!Array.isArray(data)) {
+                        alert('Formato inválido');
+                        return;
+                    }
+
+                    saveData(data);
+                    loadData();
+                    showMain();
+                    alert(`${data.length} repostajes importados ✓`);
+                    selectedFile = null;
+                    document.getElementById('importFile').value = '';
+                } catch (error) {
+                    alert('Error al importar: ' + error.message);
+                }
+            };
+            reader.readAsText(selectedFile);
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 2) throw new Error('CSV vacío o inválido');
+
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const [fecha, km, litros, consumo] = lines[i].split(',');
+                if (fecha && km && litros) {
+                    data.push({
+                        id: Date.now() + i,
+                        fecha: fecha.trim(),
+                        km: parseFloat(km),
+                        litros: parseFloat(litros),
+                        consumo: consumo ? parseFloat(consumo) : null
+                    });
+                }
+            }
+            return data;
+        }
+
+        // EXPORTAR DATOS
+        function exportData(format) {
+            const data = getAllData();
+
+            if (data.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            let content, filename, type;
+
+            if (format === 'json') {
+                content = JSON.stringify(data, null, 2);
+                filename = `fuel-tracker-${new Date().toISOString().split('T')[0]}.json`;
+                type = 'application/json';
+            } else {
+                // CSV
+                const headers = 'Fecha,Km,Litros,Consumo(l/100km)\n';
+                const rows = data.map(d => `${d.fecha},${d.km},${d.litros},${d.consumo || ''}`).join('\n');
+                content = headers + rows;
+                filename = `fuel-tracker-${new Date().toISOString().split('T')[0]}.csv`;
+                type = 'text/csv;charset=utf-8;';
+            }
+
+            const blob = new Blob([content], { type });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // BORRAR TODO
+        function clearAllData() {
+            if (confirm('¿Estás seguro? Esta acción no se puede deshacer.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                loadData();
+                showMain();
+                alert('Todos los datos han sido borrados');
+            }
+        }
+
+        // SERVICE WORKER (PWA)
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                const sw = `
+                    self.addEventListener('install', (e) => {
+                        e.waitUntil(caches.open('fuel-tracker-v1').then((cache) => {
+                            return cache.addAll(['/']);
+                        }));
+                    });
+
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(
+                            caches.match(e.request).then((res) => {
+                                return res || fetch(e.request);
+                            }).catch(() => {
+                                return caches.match(e.request);
+                            })
+                        );
+                    });
+                `;
+
+                const blob = new Blob([sw], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                navigator.serviceWorker.register(swUrl).catch(() => {
+                    // Service Worker opcional
+                });
+            }
+        }
+
+        // INICIAR
+        init();
+    </script>
+</body>
+</html>
