@@ -533,6 +533,11 @@
                     <input type="number" id="litros" placeholder="45.5" step="0.1">
                 </div>
 
+                <div class="form-group">
+                    <label for="pricePerLiterEntry">Precio € / litro</label>
+                    <input type="number" id="pricePerLiterEntry" placeholder="1.50" step="0.01">
+                </div>
+
                 <div class="consumption-display empty" id="consumptionDisplay">
                     <div class="consumption-value" id="consumptionValue">-</div>
                     <div class="consumption-unit">l/100km</div>
@@ -567,6 +572,9 @@
                             <div class="stat-value" id="statLitros">-</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- COSTE -->
                 </div>
             </div>
 
@@ -743,6 +751,7 @@
             alert('Nombre guardado ✓');
         }
 
+
         function attachEventListeners() {
             // Botones navegación
             document.getElementById('settingsBtn').addEventListener('click', toggleSettings);
@@ -859,6 +868,7 @@
             document.getElementById('statMin').textContent = minimo.toFixed(2) + ' l/100km';
             document.getElementById('statLitros').textContent = totalLitros.toFixed(1) + ' L';
 
+
             // Dibujar sparkline
             drawSparkline(data);
         }
@@ -967,8 +977,20 @@
                 fecha,
                 km,
                 litros,
+                pricePerLiter: parseFloat(document.getElementById('pricePerLiterEntry').value) || 0,
                 consumo: consumo ? parseFloat(consumo.toFixed(2)) : null
             };
+
+            // Calcular coste de este repostaje
+            entry.cost = entry.pricePerLiter > 0 ? parseFloat((entry.litros * entry.pricePerLiter).toFixed(2)) : 0;
+
+            // Calcular coste por km (desde último repostaje hasta este)
+            if (data.length > 0) {
+                const kmDiff = entry.km - data[data.length - 1].km;
+                entry.costPerKm = kmDiff > 0 ? parseFloat((entry.cost / kmDiff).toFixed(3)) : 0;
+            } else {
+                entry.costPerKm = 0;
+            }
 
             data.push(entry);
             saveData(data);
@@ -976,6 +998,7 @@
             // Limpiar formulario
             document.getElementById('km').value = '';
             document.getElementById('litros').value = '';
+            document.getElementById('pricePerLiterEntry').value = '';
             setCurrentDate();
             showConsumption(null);
 
@@ -1036,20 +1059,26 @@
 
             // Últimos 10 en orden inverso
             const recent = data.slice(-10).reverse();
-            historyList.innerHTML = recent.map(entry => `
+            historyList.innerHTML = recent.map(entry => {
+                const cost = entry.cost || 0;
+                const costPerKm = entry.costPerKm || 0;
+                const costLine = cost > 0 ? ` • ${cost.toFixed(2)}€` : '';
+                const costPerKmLine = costPerKm > 0 ? ` (${costPerKm.toFixed(3)}€/km)` : '';
+                return `
                 <li class="history-item" data-id="${entry.id}">
                     <div class="history-item-delete-bg">🗑️</div>
                     <div class="history-item-wrapper">
                         <div class="history-item-content">
                             <div class="history-info">
                                 <div class="history-date">${formatDate(entry.fecha)}</div>
-                                <div class="history-details">${entry.km} km • ${entry.litros} L</div>
+                                <div class="history-details">${entry.km} km • ${entry.litros} L${costLine}${costPerKmLine}</div>
                             </div>
                             <div class="history-consumption">${entry.consumo ? entry.consumo.toFixed(2) + ' l/100km' : '-'}</div>
                         </div>
                     </div>
                 </li>
-            `).join('');
+            `;
+            }).join('');
 
             // Añadir event listeners para swipe
             document.querySelectorAll('.history-item').forEach(item => {
