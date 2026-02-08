@@ -75,19 +75,34 @@
 
         .content {
             flex: 1;
-            overflow-y: scroll;
-            padding: 16px;
-            -webkit-overflow-scrolling: touch;
+            padding: 0;
             width: 100%;
-            min-height: 0;
+            overflow: hidden;
         }
 
         /* PANTALLA PRINCIPAL */
         .main-screen {
             display: none;
+            height: 100%;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
         }
 
         .main-screen.active {
+            display: block;
+        }
+
+        /* PANTALLA CONFIGURACIÓN */
+        .settings-screen {
+            display: none;
+            height: 100%;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+        }
+
+        .settings-screen.active {
             display: block;
         }
 
@@ -282,14 +297,6 @@
             color: #2c3e50;
         }
 
-        /* PANTALLA CONFIGURACIÓN */
-        .settings-screen {
-            display: none;
-        }
-
-        .settings-screen.active {
-            display: block;
-        }
 
         .back-btn {
             background: none;
@@ -414,7 +421,7 @@
         <div class="header">
             <div>
                 <h1>⛽ Fuel Tracker</h1>
-                <div class="header-subtitle">Audi A4 B8 GCB</div>
+                <div class="header-subtitle">Audi A4 B8 2011</div>
             </div>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
