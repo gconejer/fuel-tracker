@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -289,15 +288,6 @@
             display: block;
         }
 
-        .back-btn {
-            background: none;
-            border: none;
-            color: #667eea;
-            font-size: 18px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
 
         .settings-section {
             margin-bottom: 30px;
@@ -468,7 +458,6 @@
 
             <!-- PANTALLA CONFIGURACIÓN -->
             <div class="settings-screen" id="settingsScreen">
-                <button class="back-btn" id="backBtn">← Atrás</button>
 
                 <!-- HISTÓRICO EN CONFIGURACIÓN -->
                 <div class="settings-section">
@@ -527,8 +516,7 @@
 
         function attachEventListeners() {
             // Botones navegación
-            document.getElementById('settingsBtn').addEventListener('click', showSettings);
-            document.getElementById('backBtn').addEventListener('click', showMain);
+            document.getElementById('settingsBtn').addEventListener('click', toggleSettings);
 
             // Formulario
             document.getElementById('km').addEventListener('input', calculateConsumption);
@@ -541,6 +529,29 @@
             document.getElementById('exportJsonBtn').addEventListener('click', () => exportData('json'));
             document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
             document.getElementById('clearBtn').addEventListener('click', clearAllData);
+        }
+
+        function toggleSettings() {
+            const mainScreen = document.getElementById('mainScreen');
+            const settingsScreen = document.getElementById('settingsScreen');
+            
+            mainScreen.classList.toggle('active');
+            settingsScreen.classList.toggle('active');
+            
+            if (settingsScreen.classList.contains('active')) {
+                renderStats();
+            }
+        }
+
+        function showSettings() {
+            document.getElementById('mainScreen').classList.remove('active');
+            document.getElementById('settingsScreen').classList.add('active');
+            renderStats();
+        }
+
+        function showMain() {
+            document.getElementById('settingsScreen').classList.remove('active');
+            document.getElementById('mainScreen').classList.add('active');
         }
 
         // CÁLCULO DE CONSUMO
