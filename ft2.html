@@ -1261,14 +1261,21 @@
             const data = getAllData();
             const alertContainer = document.getElementById('alertContainer');
 
-            if (!alertContainer) return;
+            if (!alertContainer) {
+                console.error('❌ alertContainer no encontrado');
+                return;
+            }
 
             const anomaly = detectAnomalies(data);
+            console.log('📊 Anomalía:', anomaly);
 
             if (anomaly) {
-                alertContainer.innerHTML = `<div class="alert-box ${anomaly.tipo}">${anomaly.mensaje}</div>`;
+                const html = `<div class="alert-box ${anomaly.tipo}">${anomaly.mensaje}</div>`;
+                alertContainer.innerHTML = html;
+                console.log('✅ Alerta mostrada:', html);
             } else {
                 alertContainer.innerHTML = '';
+                console.log('ℹ️ Sin anomalías');
             }
         }
 
