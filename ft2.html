@@ -1234,21 +1234,23 @@
             if (data.length === 0) return null;
 
             const consumos = data.filter(d => d.consumo !== null).map(d => d.consumo);
-            if (consumos.length < 2) return null;
+            if (consumos.length < 1) return null;
 
-            const promedio = consumos.reduce((a, b) => a + b, 0) / consumos.length;
-            const desviacion = Math.sqrt(consumos.reduce((sum, d) => sum + Math.pow(d - promedio, 2), 0) / consumos.length);
-            
             const lastEntry = data[data.length - 1];
             if (!lastEntry.consumo) return null;
 
-            const diferencia = Math.abs(lastEntry.consumo - promedio);
-            const desviacionesAltas = diferencia / (desviacion || 1);
+            // Si solo hay 1 repostaje, no hay anomalía aún
+            if (consumos.length === 1) return null;
 
-            if (desviacionesAltas > 1.5) {
+            const promedio = consumos.slice(0, -1).reduce((a, b) => a + b, 0) / (consumos.length - 1);
+            const diferencia = Math.abs(lastEntry.consumo - promedio);
+            const porcentajeDiferencia = (diferencia / promedio) * 100;
+
+            // Alerta si la diferencia es mayor al 30% del promedio
+            if (porcentajeDiferencia > 30) {
                 return {
                     tipo: 'warning',
-                    mensaje: `⚠️ Consumo anómalo: ${lastEntry.consumo.toFixed(2)} l/100km (promedio: ${promedio.toFixed(2)} l/100km)`
+                    mensaje: `⚠️ Consumo anómalo: ${lastEntry.consumo.toFixed(2)} l/100km (promedio anterior: ${promedio.toFixed(2)} l/100km, +${porcentajeDiferencia.toFixed(1)}%)`
                 };
             }
 
