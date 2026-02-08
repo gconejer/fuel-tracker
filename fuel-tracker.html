@@ -73,8 +73,32 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .last-update {
+            text-align: right;
+            font-size: 11px;
+        }
+
+        .update-label {
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+
+        .update-date {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
         .content {
-            
+            flex: 1;
+            padding: 0;
+            width: 100%;
+            overflow: hidden;
         }
 
         /* PANTALLA PRINCIPAL */
@@ -418,9 +442,15 @@
         <div class="header">
             <div>
                 <h1>⛽ Fuel Tracker</h1>
-                <div class="header-subtitle">Audi A4 B8 GCB</div>
+                <div class="header-subtitle">Audi A4 B8 2011</div>
             </div>
-            <button class="settings-btn" id="settingsBtn">⚙️</button>
+            <div class="header-right">
+                <div class="last-update">
+                    <div class="update-label">Actualizado</div>
+                    <div class="update-date" id="updateDate">08/02/2026 17:55</div>
+                </div>
+                <button class="settings-btn" id="settingsBtn">⚙️</button>
+            </div>
         </div>
 
         <div class="content">
