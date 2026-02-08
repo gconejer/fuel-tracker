@@ -91,36 +91,30 @@
             padding: 0;
             width: 100%;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
         /* PANTALLA PRINCIPAL */
         .main-screen {
             display: none;
-            flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 16px;
         }
 
         .main-screen.active {
-            display: flex;
-            flex-direction: column;
+            display: block;
         }
 
         /* PANTALLA CONFIGURACIÓN */
         .settings-screen {
             display: none;
-            flex: 1;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 16px;
         }
 
         .settings-screen.active {
-            display: flex;
-            flex-direction: column;
+            display: block;
         }
 
         .form-group {
@@ -445,7 +439,7 @@
             <div class="header-right">
                 <div class="last-update">
                     <div class="update-label">Actualizado</div>
-                    <div class="update-date" id="updateDate">08/02/2026 18:48</div>
+                    <div class="update-date" id="updateDate">08/02/2026 18:52</div>
                 </div>
                 <button class="settings-btn" id="settingsBtn">⚙️</button>
             </div>
