@@ -40,14 +40,15 @@
         .header {
             background: #2c3e50;
             color: white;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 600;
         }
 
@@ -74,9 +75,11 @@
 
         .content {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: scroll;
             padding: 16px;
             -webkit-overflow-scrolling: touch;
+            width: 100%;
+            min-height: 0;
         }
 
         /* PANTALLA PRINCIPAL */
