@@ -447,6 +447,65 @@
             color: #2c3e50;
         }
 
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .filter-tab {
+            flex-shrink: 0;
+            padding: 8px 14px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .filter-tab:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .alert-box {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            border-left: 4px solid;
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .alert-box.warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .alert-box.danger {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-box.info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
         .btn-group {
             display: flex;
             gap: 10px;
@@ -547,6 +606,8 @@
                 </div>
 
                 <!-- ESTADÍSTICAS EN PANTALLA PRINCIPAL -->
+                <div id="alertContainer"></div>
+                
                 <div class="stats-section">
                     <div class="stats-title">📊 Consumo</div>
                     <div class="stats-grid">
@@ -594,6 +655,14 @@
                 <!-- ESTADÍSTICAS EN CONFIGURACIÓN -->
                 <div class="settings-section">
                     <div class="settings-section-title">📊 Análisis detallado</div>
+                    
+                    <!-- FILTROS POR PERÍODO -->
+                    <div class="filter-tabs" id="filterTabs">
+                        <button class="filter-tab active" data-filter="all">Todo</button>
+                        <button class="filter-tab" data-filter="month">Este mes</button>
+                        <button class="filter-tab" data-filter="3months">3 meses</button>
+                    </div>
+                    
                     <div id="statsContainer"></div>
                 </div>
 
@@ -714,6 +783,7 @@
         const DB_KEY = 'fuelTrackerData';
         const STORAGE_KEY = 'fuelTrackerItems';
         let chart = null;
+        let currentFilter = 'all';
 
         // INICIALIZACIÓN
         function init() {
@@ -761,6 +831,16 @@
             document.getElementById('helpBtn').addEventListener('click', showHelp);
             document.getElementById('backToSettingsBtn').addEventListener('click', backToSettings);
             document.getElementById('saveVehicleNameBtn').addEventListener('click', saveVehicleName);
+
+            // Filtros
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderStats();
+                });
+            });
         }
 
         function toggleSettings() {
@@ -858,6 +938,9 @@
             document.getElementById('statMax').textContent = maximo.toFixed(2) + ' l/100km';
             document.getElementById('statMin').textContent = minimo.toFixed(2) + ' l/100km';
             document.getElementById('statLitros').textContent = totalLitros.toFixed(1) + ' L';
+
+            // Actualizar alertas de anomalías
+            updateAlerts();
 
             // Dibujar sparkline
             drawSparkline(data);
@@ -1129,11 +1212,70 @@
         }
 
         // ESTADÍSTICAS
-        function renderStats() {
+
+        function filterDataByPeriod(data, period) {
+            if (period === 'all') {
+                return data;
+            }
+
+            const now = new Date();
+            let cutoffDate = new Date();
+
+            if (period === 'month') {
+                cutoffDate.setMonth(cutoffDate.getMonth() - 1);
+            } else if (period === '3months') {
+                cutoffDate.setMonth(cutoffDate.getMonth() - 3);
+            }
+
+            return data.filter(d => new Date(d.fecha) >= cutoffDate);
+        }
+
+        function detectAnomalies(data) {
+            if (data.length === 0) return null;
+
+            const consumos = data.filter(d => d.consumo !== null).map(d => d.consumo);
+            if (consumos.length < 2) return null;
+
+            const promedio = consumos.reduce((a, b) => a + b, 0) / consumos.length;
+            const desviacion = Math.sqrt(consumos.reduce((sum, d) => sum + Math.pow(d - promedio, 2), 0) / consumos.length);
+            
+            const lastEntry = data[data.length - 1];
+            if (!lastEntry.consumo) return null;
+
+            const diferencia = Math.abs(lastEntry.consumo - promedio);
+            const desviacionesAltas = diferencia / (desviacion || 1);
+
+            if (desviacionesAltas > 1.5) {
+                return {
+                    tipo: 'warning',
+                    mensaje: `⚠️ Consumo anómalo: ${lastEntry.consumo.toFixed(2)} l/100km (promedio: ${promedio.toFixed(2)} l/100km)`
+                };
+            }
+
+            return null;
+        }
+
+        function updateAlerts() {
             const data = getAllData();
+            const alertContainer = document.getElementById('alertContainer');
+
+            if (!alertContainer) return;
+
+            const anomaly = detectAnomalies(data);
+
+            if (anomaly) {
+                alertContainer.innerHTML = `<div class="alert-box ${anomaly.tipo}">${anomaly.mensaje}</div>`;
+            } else {
+                alertContainer.innerHTML = '';
+            }
+        }
+
+        function renderStats() {
+            const allData = getAllData();
+            const data = filterDataByPeriod(allData, currentFilter);
 
             if (data.length === 0) {
-                document.getElementById('statsContainer').innerHTML = '<div class="no-data-message">Sin datos aún</div>';
+                document.getElementById('statsContainer').innerHTML = '<div class="no-data-message">Sin datos en este período</div>';
                 return;
             }
 
@@ -1143,7 +1285,7 @@
             const maximo = consumos.length > 0 ? Math.max(...consumos) : 0;
             const minimo = consumos.length > 0 ? Math.min(...consumos) : 0;
             const totalLitros = data.reduce((sum, d) => sum + d.litros, 0);
-            const totalKm = data[data.length - 1].km - data[0].km;
+            const totalKm = data.length > 1 ? data[data.length - 1].km - data[0].km : 0;
             const totalRepostajes = data.length;
 
             const statsHTML = `
