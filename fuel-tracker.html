@@ -212,6 +212,42 @@
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
+            position: relative;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+
+        .history-item-content {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .history-item.swiped .history-item-content {
+            transform: translateX(-60px);
+        }
+
+        .history-item-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background: #e74c3c;
+            color: white;
+            width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item-delete:active {
+            background: #c0392b;
         }
 
         .history-info {
@@ -738,14 +774,65 @@
             // Últimos 10 en orden inverso
             const recent = data.slice(-10).reverse();
             historyList.innerHTML = recent.map(entry => `
-                <li class="history-item">
-                    <div class="history-info">
-                        <div class="history-date">${formatDate(entry.fecha)}</div>
-                        <div class="history-details">${entry.km} km • ${entry.litros} L</div>
+                <li class="history-item" data-id="${entry.id}">
+                    <div class="history-item-content">
+                        <div class="history-info">
+                            <div class="history-date">${formatDate(entry.fecha)}</div>
+                            <div class="history-details">${entry.km} km • ${entry.litros} L</div>
+                        </div>
+                        <div class="history-consumption">${entry.consumo ? entry.consumo.toFixed(2) + ' l/100km' : '-'}</div>
                     </div>
-                    <div class="history-consumption">${entry.consumo ? entry.consumo.toFixed(2) + ' l/100km' : '-'}</div>
+                    <div class="history-item-delete">🗑️</div>
                 </li>
             `).join('');
+
+            // Añadir event listeners para swipe y delete
+            document.querySelectorAll('.history-item').forEach(item => {
+                let startX = 0;
+                
+                item.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                });
+
+                item.addEventListener('touchmove', (e) => {
+                    const currentX = e.touches[0].clientX;
+                    const diff = startX - currentX;
+                    
+                    if (diff > 30) {
+                        item.classList.add('swiped');
+                    } else if (diff < -30) {
+                        item.classList.remove('swiped');
+                    }
+                });
+
+                item.addEventListener('touchend', (e) => {
+                    const currentX = e.changedTouches[0].clientX;
+                    const diff = startX - currentX;
+                    
+                    if (diff < 50) {
+                        item.classList.remove('swiped');
+                    }
+                });
+
+                item.querySelector('.history-item-delete').addEventListener('click', () => {
+                    deleteEntry(item.dataset.id);
+                });
+            });
+        }
+
+        function deleteEntry(entryId) {
+            if (confirm('¿Deseas eliminar este repostaje?')) {
+                const data = getAllData();
+                const filteredData = data.filter(entry => entry.id != entryId);
+                
+                // Recalcular consumos
+                const recalculated = recalculateConsumptions(filteredData);
+                saveData(recalculated);
+                
+                loadData();
+                renderStats();
+                alert('Repostaje eliminado ✓');
+            }
         }
 
         function formatDate(dateStr) {
