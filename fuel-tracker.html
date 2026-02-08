@@ -242,6 +242,43 @@
             font-size: 14px;
         }
 
+        /* ESTADÍSTICAS EN PANTALLA PRINCIPAL */
+        .stats-section {
+            margin-top: 20px;
+        }
+
+        .stats-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
         /* PANTALLA CONFIGURACIÓN */
         .settings-screen {
             display: none;
@@ -404,12 +441,27 @@
 
                 <button class="btn btn-primary" id="saveBtn">Guardar repostaje</button>
 
-                <!-- HISTÓRICO -->
-                <div class="history-section">
-                    <div class="history-title">Últimos repostajes</div>
-                    <ul class="history-list" id="historyList">
-                        <li class="empty-message">Sin repostajes aún</li>
-                    </ul>
+                <!-- ESTADÍSTICAS EN PANTALLA PRINCIPAL -->
+                <div class="stats-section">
+                    <div class="stats-title">📊 Consumo</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Promedio</div>
+                            <div class="stat-value" id="statAvg">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Máximo</div>
+                            <div class="stat-value" id="statMax">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Mínimo</div>
+                            <div class="stat-value" id="statMin">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total litros</div>
+                            <div class="stat-value" id="statLitros">-</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -417,9 +469,17 @@
             <div class="settings-screen" id="settingsScreen">
                 <button class="back-btn" id="backBtn">← Atrás</button>
 
-                <!-- ESTADÍSTICAS -->
+                <!-- HISTÓRICO EN CONFIGURACIÓN -->
                 <div class="settings-section">
-                    <div class="settings-section-title">📊 Estadísticas</div>
+                    <div class="settings-section-title">⏱️ Últimos repostajes</div>
+                    <ul class="history-list" id="historyList">
+                        <li class="empty-message">Sin repostajes aún</li>
+                    </ul>
+                </div>
+
+                <!-- ESTADÍSTICAS EN CONFIGURACIÓN -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📊 Análisis detallado</div>
                     <div id="statsContainer"></div>
                 </div>
 
@@ -522,6 +582,30 @@
             }
         }
 
+        // ESTADÍSTICAS EN PANTALLA PRINCIPAL
+        function updateMainStats() {
+            const data = getAllData();
+            const consumos = data.filter(d => d.consumo !== null).map(d => d.consumo);
+
+            if (consumos.length === 0) {
+                document.getElementById('statAvg').textContent = '-';
+                document.getElementById('statMax').textContent = '-';
+                document.getElementById('statMin').textContent = '-';
+                document.getElementById('statLitros').textContent = '-';
+                return;
+            }
+
+            const promedio = consumos.reduce((a, b) => a + b, 0) / consumos.length;
+            const maximo = Math.max(...consumos);
+            const minimo = Math.min(...consumos);
+            const totalLitros = data.reduce((sum, d) => sum + d.litros, 0);
+
+            document.getElementById('statAvg').textContent = promedio.toFixed(2) + ' l/100km';
+            document.getElementById('statMax').textContent = maximo.toFixed(2) + ' l/100km';
+            document.getElementById('statMin').textContent = minimo.toFixed(2) + ' l/100km';
+            document.getElementById('statLitros').textContent = totalLitros.toFixed(1) + ' L';
+        }
+
         // GUARDAR ENTRADA
         function saveEntry() {
             const fecha = document.getElementById('fecha').value;
@@ -579,6 +663,7 @@
             const data = getAllData();
             displayHistory(data);
             updateKmPlaceholder(data);
+            updateMainStats();
         }
 
         function updateKmPlaceholder(data) {
