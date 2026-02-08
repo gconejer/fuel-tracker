@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c3e50">
-    <meta name="description" content="Gestor de consumo de combustible para tu Audi A4 B8">
-    <title>Fuel Tracker - Audi A4 B8</title>
+    <meta name="description" content="Gestor de consumo de combustible">
+    <title>Fuel Tracker</title>
     <link rel="manifest" href="manifest.json">
     <style>
         * {
@@ -327,7 +327,76 @@
             display: block;
         }
 
+        /* PANTALLA AYUDA */
+        .help-screen {
+            display: none;
+            padding: 16px;
+        }
 
+        .help-screen.active {
+            display: block;
+        }
+
+        .back-to-settings-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .help-content {
+            background: white;
+        }
+
+        .help-content h2 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        .help-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .help-section:last-child {
+            border-bottom: none;
+        }
+
+        .help-section h3 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .help-section p {
+            color: #555;
+            font-size: 14px;
+            margin: 0 0 12px 0;
+            line-height: 1.6;
+        }
+
+        .help-section ul {
+            color: #555;
+            font-size: 14px;
+            margin: 0;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        .help-section li {
+            margin-bottom: 8px;
+        }
+
+        .help-section strong {
+            color: #2c3e50;
+        }
         .settings-section {
             margin-bottom: 30px;
         }
@@ -441,7 +510,7 @@
         <div class="header">
             <div>
                 <h1>⛽ Fuel Tracker</h1>
-                <div class="header-subtitle">Audi A4 B8 2011</div>
+                <div class="header-subtitle">Gestor de consumo</div>
             </div>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
@@ -529,6 +598,96 @@
                     <button class="btn btn-secondary" id="exportCsvBtn">Descargar CSV</button>
                     <button class="btn btn-danger" id="clearBtn">Borrar todos los datos</button>
                 </div>
+
+                <!-- AYUDA -->
+                <div class="settings-section">
+                    <div class="settings-section-title">❓ Ayuda</div>
+                    <button class="btn btn-secondary" id="helpBtn">Ver instrucciones</button>
+                </div>
+            </div>
+
+            <!-- PANTALLA AYUDA -->
+            <div class="help-screen" id="helpScreen">
+                <button class="back-to-settings-btn" id="backToSettingsBtn">← Atrás</button>
+
+                <div class="help-content">
+                    <h2>¿Cómo usar Fuel Tracker?</h2>
+
+                    <div class="help-section">
+                        <h3>📝 Registrar un repostaje</h3>
+                        <p>En la pantalla principal, completa los siguientes campos:</p>
+                        <ul>
+                            <li><strong>Fecha:</strong> Se rellena automáticamente con la fecha actual</li>
+                            <li><strong>Km actuales:</strong> Los kilómetros que marca el cuentakilómetros de tu vehículo</li>
+                            <li><strong>Litros repostados:</strong> La cantidad de combustible que has repostado</li>
+                        </ul>
+                        <p>El consumo se calcula automáticamente en l/100km. Toca "Guardar repostaje" para guardarlo.</p>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>📊 Ver estadísticas</h3>
+                        <p>En la pantalla principal verás un resumen con:</p>
+                        <ul>
+                            <li><strong>Promedio:</strong> Consumo medio de todos los repostajes</li>
+                            <li><strong>Máximo:</strong> Mayor consumo registrado</li>
+                            <li><strong>Mínimo:</strong> Menor consumo registrado</li>
+                            <li><strong>Total litros:</strong> Litros totales repostados</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>⏱️ Histórico de repostajes</h3>
+                        <p>En la pantalla de configuración (⚙️) verás todos tus repostajes anteriores. Puedes:</p>
+                        <ul>
+                            <li><strong>Ver detalles:</strong> Fecha, kilómetros y consumo de cada repostaje</li>
+                            <li><strong>Eliminar repostaje:</strong> Desliza a la izquierda y toca la papelera</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>📤 Exportar datos</h3>
+                        <p>En configuración (⚙️) puedes descargar tus datos en dos formatos:</p>
+                        <ul>
+                            <li><strong>JSON:</strong> Para hacer backup o transferir a otro dispositivo</li>
+                            <li><strong>CSV:</strong> Para abrir en Excel o Google Sheets</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>📥 Importar datos</h3>
+                        <p>En configuración (⚙️) puedes cargar un archivo previamente descargado:</p>
+                        <ul>
+                            <li>Selecciona un archivo JSON o CSV</li>
+                            <li>Toca "Cargar datos"</li>
+                            <li>Los consumos se recalculan automáticamente</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>⚠️ Validaciones</h3>
+                        <p>La app te alertará si:</p>
+                        <ul>
+                            <li><strong>La fecha es anterior:</strong> A la del último repostaje registrado</li>
+                            <li><strong>Los km son menores:</strong> A los del último repostaje registrado</li>
+                        </ul>
+                        <p>Puedes confirmar o cancelar estas operaciones.</p>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>🗑️ Borrar todo</h3>
+                        <p>En configuración (⚙️) puedes eliminar todos los datos. Esta acción no se puede deshacer, así que asegúrate de haber hecho backup primero.</p>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>💡 Consejos</h3>
+                        <ul>
+                            <li>Registra cada repostaje para obtener datos más precisos</li>
+                            <li>Descarga tus datos regularmente como backup</li>
+                            <li>La app funciona sin conexión a internet</li>
+                            <li>Los datos se guardan localmente en tu dispositivo</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -568,6 +727,8 @@
             document.getElementById('exportJsonBtn').addEventListener('click', () => exportData('json'));
             document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
             document.getElementById('clearBtn').addEventListener('click', clearAllData);
+            document.getElementById('helpBtn').addEventListener('click', showHelp);
+            document.getElementById('backToSettingsBtn').addEventListener('click', backToSettings);
         }
 
         function toggleSettings() {
@@ -591,6 +752,16 @@
         function showMain() {
             document.getElementById('settingsScreen').classList.remove('active');
             document.getElementById('mainScreen').classList.add('active');
+        }
+
+        function showHelp() {
+            document.getElementById('settingsScreen').classList.remove('active');
+            document.getElementById('helpScreen').classList.add('active');
+        }
+
+        function backToSettings() {
+            document.getElementById('helpScreen').classList.remove('active');
+            document.getElementById('settingsScreen').classList.add('active');
         }
 
         // CÁLCULO DE CONSUMO
