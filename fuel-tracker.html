@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -17,30 +18,37 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: white;
-            margin: 0;
+            min-height: 100vh;
             padding: 0;
+            margin: 0;
             color: #333;
         }
 
         .container {
             width: 100%;
+            min-height: 100vh;
+            background: white;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
         .header {
             background: #2c3e50;
             color: white;
-            padding: 16px;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
         }
 
         .header h1 {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 600;
         }
 
@@ -65,62 +73,29 @@
             background: rgba(255, 255, 255, 0.3);
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .last-update {
-            text-align: right;
-            font-size: 11px;
-        }
-
-        .update-label {
-            opacity: 0.7;
-            margin-bottom: 2px;
-        }
-
-        .update-date {
-            font-weight: 600;
-            font-size: 12px;
-        }
-
         .content {
             flex: 1;
-            padding: 0;
-            width: 100%;
             overflow-y: auto;
+            padding: 16px;
             -webkit-overflow-scrolling: touch;
         }
 
         /* PANTALLA PRINCIPAL */
         .main-screen {
             display: none;
-            padding: 16px;
         }
 
         .main-screen.active {
             display: block;
         }
 
-        /* PANTALLA CONFIGURACIÓN */
-        .settings-screen {
-            display: none;
-            padding: 16px;
-        }
-
-        .settings-screen.active {
-            display: block;
-        }
-
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #2c3e50;
             font-size: 13px;
@@ -149,9 +124,9 @@
         .consumption-display {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 14px;
+            padding: 16px;
             border-radius: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             text-align: center;
         }
 
@@ -161,27 +136,26 @@
         }
 
         .consumption-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
         }
 
         .consumption-unit {
-            font-size: 11px;
+            font-size: 12px;
             margin-top: 2px;
             opacity: 0.9;
         }
 
         .btn {
             width: 100%;
-            padding: 11px;
+            padding: 12px;
             border: none;
             border-radius: 10px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 6px;
-            flex-shrink: 0;
+            margin-bottom: 8px;
         }
 
         .btn-primary {
@@ -271,42 +245,49 @@
 
         /* ESTADÍSTICAS EN PANTALLA PRINCIPAL */
         .stats-section {
-            margin-top: 16px;
-            flex-shrink: 0;
+            margin-top: 20px;
         }
 
         .stats-title {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 10px;
         }
 
         .stat-card {
             background: #f8f9fa;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             border-left: 4px solid #667eea;
         }
 
         .stat-label {
-            font-size: 10px;
+            font-size: 11px;
             color: #666;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .stat-value {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: bold;
             color: #2c3e50;
         }
 
+        /* PANTALLA CONFIGURACIÓN */
+        .settings-screen {
+            display: none;
+        }
+
+        .settings-screen.active {
+            display: block;
+        }
 
         .back-btn {
             background: none;
@@ -433,13 +414,7 @@
                 <h1>⛽ Fuel Tracker</h1>
                 <div class="header-subtitle">Audi A4 B8 2011</div>
             </div>
-            <div class="header-right">
-                <div class="last-update">
-                    <div class="update-label">Actualizado</div>
-                    <div class="update-date" id="updateDate">08/02/2026 17:55</div>
-                </div>
-                <button class="settings-btn" id="settingsBtn">⚙️</button>
-            </div>
+            <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
 
         <div class="content">
@@ -540,7 +515,6 @@
         // INICIALIZACIÓN
         function init() {
             setCurrentDate();
-            updateLastUpdateDate();
             loadData();
             attachEventListeners();
             registerServiceWorker();
@@ -549,17 +523,6 @@
         function setCurrentDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('fecha').value = today;
-        }
-
-        function updateLastUpdateDate() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const dateString = `${day}/${month}/${year} ${hours}:${minutes}`;
-            document.getElementById('updateDate').textContent = dateString;
         }
 
         function attachEventListeners() {
