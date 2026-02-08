@@ -618,6 +618,29 @@
             }
 
             const data = getAllData();
+
+            // VALIDACIÓN 1: Comprobar fecha posterior a la última
+            if (data.length > 0) {
+                const lastEntry = data[data.length - 1];
+                const lastFecha = new Date(lastEntry.fecha);
+                const currentFecha = new Date(fecha);
+
+                if (currentFecha < lastFecha) {
+                    const confirmFecha = confirm(`⚠️ La fecha seleccionada (${fecha}) es anterior a la última fecha registrada (${lastEntry.fecha}).\n\n¿Deseas continuar guardando?`);
+                    if (!confirmFecha) {
+                        return;
+                    }
+                }
+
+                // VALIDACIÓN 2: Comprobar km inferior al último
+                if (km < lastEntry.km) {
+                    const confirmKm = confirm(`⚠️ Los km introducidos (${km}) son inferiores al último registro (${lastEntry.km}) km.\n\n¿Deseas continuar guardando?`);
+                    if (!confirmKm) {
+                        return;
+                    }
+                }
+            }
+
             let consumo = null;
 
             if (data.length > 0) {
@@ -657,6 +680,21 @@
 
         function saveData(data) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function recalculateConsumptions(data) {
+            for (let i = 1; i < data.length; i++) {
+                const current = data[i];
+                const previous = data[i - 1];
+                
+                const kmDiff = current.km - previous.km;
+                if (kmDiff > 0 && current.litros > 0) {
+                    current.consumo = parseFloat(((current.litros * 100) / kmDiff).toFixed(2));
+                } else {
+                    current.consumo = null;
+                }
+            }
+            return data;
         }
 
         function loadData() {
@@ -858,6 +896,8 @@
                         return;
                     }
 
+                    // Recalcular consumos
+                    data = recalculateConsumptions(data);
                     saveData(data);
                     loadData();
                     showMain();
@@ -931,6 +971,7 @@
             if (confirm('¿Estás seguro? Esta acción no se puede deshacer.')) {
                 localStorage.removeItem(STORAGE_KEY);
                 loadData();
+                renderStats();
                 showMain();
                 alert('Todos los datos han sido borrados');
             }
