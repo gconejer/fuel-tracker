@@ -90,14 +90,13 @@
             flex: 1;
             padding: 0;
             width: 100%;
-            overflow: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* PANTALLA PRINCIPAL */
         .main-screen {
             display: none;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             padding: 16px;
         }
 
@@ -108,8 +107,6 @@
         /* PANTALLA CONFIGURACIÓN */
         .settings-screen {
             display: none;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
             padding: 16px;
         }
 
@@ -439,7 +436,7 @@
             <div class="header-right">
                 <div class="last-update">
                     <div class="update-label">Actualizado</div>
-                    <div class="update-date" id="updateDate">08/02/2026 18:52</div>
+                    <div class="update-date" id="updateDate">08/02/2026 17:55</div>
                 </div>
                 <button class="settings-btn" id="settingsBtn">⚙️</button>
             </div>
@@ -543,6 +540,7 @@
         // INICIALIZACIÓN
         function init() {
             setCurrentDate();
+            updateLastUpdateDate();
             loadData();
             attachEventListeners();
             registerServiceWorker();
@@ -551,6 +549,17 @@
         function setCurrentDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('fecha').value = today;
+        }
+
+        function updateLastUpdateDate() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const dateString = `${day}/${month}/${year} ${hours}:${minutes}`;
+            document.getElementById('updateDate').textContent = dateString;
         }
 
         function attachEventListeners() {
