@@ -510,7 +510,7 @@
         <div class="header">
             <div>
                 <h1>⛽ Fuel Tracker</h1>
-                <div class="header-subtitle">Gestor de consumo</div>
+                <div class="header-subtitle" id="header-subtitle">Gestor de consumo</div>
             </div>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
@@ -572,6 +572,16 @@
 
             <!-- PANTALLA CONFIGURACIÓN -->
             <div class="settings-screen" id="settingsScreen">
+
+                <!-- NOMBRE DEL VEHÍCULO -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🚗 Mi vehículo</div>
+                    <div class="form-group">
+                        <label for="vehicleNameInput">Nombre del vehículo</label>
+                        <input type="text" id="vehicleNameInput" placeholder="Ej: Mi Audi A4">
+                    </div>
+                    <button class="btn btn-secondary" id="saveVehicleNameBtn">Guardar nombre</button>
+                </div>
 
                 <!-- HISTÓRICO EN CONFIGURACIÓN -->
                 <div class="settings-section">
@@ -708,6 +718,7 @@
         // INICIALIZACIÓN
         function init() {
             setCurrentDate();
+            loadVehicleName();
             loadData();
             attachEventListeners();
             registerServiceWorker();
@@ -716,6 +727,20 @@
         function setCurrentDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('fecha').value = today;
+        }
+
+        function loadVehicleName() {
+            const vehicleName = localStorage.getItem('fuelTrackerVehicleName') || 'Gestor de consumo';
+            document.getElementById('header-subtitle').textContent = vehicleName;
+            document.getElementById('vehicleNameInput').value = vehicleName === 'Gestor de consumo' ? '' : vehicleName;
+        }
+
+        function saveVehicleName() {
+            const input = document.getElementById('vehicleNameInput');
+            const vehicleName = input.value.trim() || 'Gestor de consumo';
+            localStorage.setItem('fuelTrackerVehicleName', vehicleName);
+            document.getElementById('header-subtitle').textContent = vehicleName;
+            alert('Nombre guardado ✓');
         }
 
         function attachEventListeners() {
@@ -735,6 +760,7 @@
             document.getElementById('clearBtn').addEventListener('click', clearAllData);
             document.getElementById('helpBtn').addEventListener('click', showHelp);
             document.getElementById('backToSettingsBtn').addEventListener('click', backToSettings);
+            document.getElementById('saveVehicleNameBtn').addEventListener('click', saveVehicleName);
         }
 
         function toggleSettings() {
