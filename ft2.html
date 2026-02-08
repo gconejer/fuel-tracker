@@ -533,11 +533,6 @@
                     <input type="number" id="litros" placeholder="45.5" step="0.1">
                 </div>
 
-                <div class="form-group">
-                    <label for="pricePerLiterEntry">Precio € / litro</label>
-                    <input type="number" id="pricePerLiterEntry" placeholder="1.50" step="0.01">
-                </div>
-
                 <div class="consumption-display empty" id="consumptionDisplay">
                     <div class="consumption-value" id="consumptionValue">-</div>
                     <div class="consumption-unit">l/100km</div>
@@ -572,9 +567,6 @@
                             <div class="stat-value" id="statLitros">-</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- COSTE -->
                 </div>
             </div>
 
@@ -751,7 +743,6 @@
             alert('Nombre guardado ✓');
         }
 
-
         function attachEventListeners() {
             // Botones navegación
             document.getElementById('settingsBtn').addEventListener('click', toggleSettings);
@@ -775,10 +766,10 @@
         function toggleSettings() {
             const mainScreen = document.getElementById('mainScreen');
             const settingsScreen = document.getElementById('settingsScreen');
-            
+
             mainScreen.classList.toggle('active');
             settingsScreen.classList.toggle('active');
-            
+
             if (settingsScreen.classList.contains('active')) {
                 renderStats();
             }
@@ -868,7 +859,6 @@
             document.getElementById('statMin').textContent = minimo.toFixed(2) + ' l/100km';
             document.getElementById('statLitros').textContent = totalLitros.toFixed(1) + ' L';
 
-
             // Dibujar sparkline
             drawSparkline(data);
         }
@@ -882,7 +872,7 @@
             document.getElementById('sparklineContainer').style.display = 'block';
             const canvas = document.getElementById('sparklineChart');
             const ctx = canvas.getContext('2d');
-            
+
             const recent = data.slice(-10).filter(d => d.consumo !== null);
             if (recent.length === 0) {
                 document.getElementById('sparklineContainer').style.display = 'none';
@@ -977,20 +967,8 @@
                 fecha,
                 km,
                 litros,
-                pricePerLiter: parseFloat(document.getElementById('pricePerLiterEntry').value) || 0,
                 consumo: consumo ? parseFloat(consumo.toFixed(2)) : null
             };
-
-            // Calcular coste de este repostaje
-            entry.cost = entry.pricePerLiter > 0 ? parseFloat((entry.litros * entry.pricePerLiter).toFixed(2)) : 0;
-
-            // Calcular coste por km (desde último repostaje hasta este)
-            if (data.length > 0) {
-                const kmDiff = entry.km - data[data.length - 1].km;
-                entry.costPerKm = kmDiff > 0 ? parseFloat((entry.cost / kmDiff).toFixed(3)) : 0;
-            } else {
-                entry.costPerKm = 0;
-            }
 
             data.push(entry);
             saveData(data);
@@ -998,7 +976,6 @@
             // Limpiar formulario
             document.getElementById('km').value = '';
             document.getElementById('litros').value = '';
-            document.getElementById('pricePerLiterEntry').value = '';
             setCurrentDate();
             showConsumption(null);
 
@@ -1020,7 +997,7 @@
             for (let i = 1; i < data.length; i++) {
                 const current = data[i];
                 const previous = data[i - 1];
-                
+
                 const kmDiff = current.km - previous.km;
                 if (kmDiff > 0 && current.litros > 0) {
                     current.consumo = parseFloat(((current.litros * 100) / kmDiff).toFixed(2));
@@ -1059,32 +1036,26 @@
 
             // Últimos 10 en orden inverso
             const recent = data.slice(-10).reverse();
-            historyList.innerHTML = recent.map(entry => {
-                const cost = entry.cost || 0;
-                const costPerKm = entry.costPerKm || 0;
-                const costLine = cost > 0 ? ` • ${cost.toFixed(2)}€` : '';
-                const costPerKmLine = costPerKm > 0 ? ` (${costPerKm.toFixed(3)}€/km)` : '';
-                return `
+            historyList.innerHTML = recent.map(entry => `
                 <li class="history-item" data-id="${entry.id}">
                     <div class="history-item-delete-bg">🗑️</div>
                     <div class="history-item-wrapper">
                         <div class="history-item-content">
                             <div class="history-info">
                                 <div class="history-date">${formatDate(entry.fecha)}</div>
-                                <div class="history-details">${entry.km} km • ${entry.litros} L${costLine}${costPerKmLine}</div>
+                                <div class="history-details">${entry.km} km • ${entry.litros} L</div>
                             </div>
                             <div class="history-consumption">${entry.consumo ? entry.consumo.toFixed(2) + ' l/100km' : '-'}</div>
                         </div>
                     </div>
                 </li>
-            `;
-            }).join('');
+            `).join('');
 
             // Añadir event listeners para swipe
             document.querySelectorAll('.history-item').forEach(item => {
                 let startX = 0;
                 let isSwiped = false;
-                
+
                 item.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
                     isSwiped = item.classList.contains('swiped');
@@ -1094,7 +1065,7 @@
                     if (!isSwiped) {
                         const currentX = e.touches[0].clientX;
                         const diff = startX - currentX;
-                        
+
                         if (diff > 50) {
                             item.classList.add('swiped');
                             isSwiped = true;
@@ -1102,7 +1073,7 @@
                     } else {
                         const currentX = e.touches[0].clientX;
                         const diff = startX - currentX;
-                        
+
                         if (diff < 30) {
                             item.classList.remove('swiped');
                             isSwiped = false;
@@ -1113,7 +1084,7 @@
                 item.addEventListener('touchend', (e) => {
                     const currentX = e.changedTouches[0].clientX;
                     const diff = startX - currentX;
-                    
+
                     if (diff < 30) {
                         item.classList.remove('swiped');
                     }
@@ -1135,11 +1106,11 @@
         function deleteEntry(entryId) {
             const data = getAllData();
             const filteredData = data.filter(entry => entry.id != entryId);
-            
+
             // Recalcular consumos
             const recalculated = recalculateConsumptions(filteredData);
             saveData(recalculated);
-            
+
             loadData();
             renderStats();
             alert('Repostaje eliminado ✓');
