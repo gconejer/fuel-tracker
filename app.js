@@ -8,6 +8,7 @@ let currentFilter = 'all';
 function init() {
     setCurrentDate();
     loadVehicleName();
+    loadTheme();
     loadData();
     attachEventListeners();
     registerServiceWorker();
@@ -35,6 +36,7 @@ function saveVehicleName() {
 function attachEventListeners() {
     // Botones navegación
     document.getElementById('settingsBtn').addEventListener('click', toggleSettings);
+    initThemeListeners();
 
     // Formulario
     document.getElementById('km').addEventListener('input', calculateConsumption);
@@ -59,6 +61,46 @@ function attachEventListeners() {
             currentFilter = e.target.dataset.filter;
             renderStats();
         });
+    });
+}
+
+// TEMA OSCURO
+function loadTheme() {
+    const theme = localStorage.getItem('fuelTrackerTheme') || 'light';
+    applyTheme(theme);
+}
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else if (theme === 'system') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+
+    // Actualizar botones activos
+    document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === theme);
+    });
+}
+
+function initThemeListeners() {
+    document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const theme = btn.dataset.theme;
+            localStorage.setItem('fuelTrackerTheme', theme);
+            applyTheme(theme);
+        });
+    });
+
+    // Escuchar cambios del sistema
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        const theme = localStorage.getItem('fuelTrackerTheme') || 'light';
+        if (theme === 'system') {
+            applyTheme('system');
+        }
     });
 }
 
