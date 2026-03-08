@@ -1,5 +1,5 @@
 {
-  "name": "Fuel Tracker - Audi A4 B8",
+  "name": "Fuel Tracker - Track Your Fuel Consumption",
   "short_name": "Fuel",
   "start_url": "./fuel-tracker.html",
   "display": "standalone",

@@ -91,14 +91,18 @@
 
         .form-group {
             margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         label {
-            display: block;
-            margin-bottom: 6px;
+            margin: 0;
             font-weight: 600;
             color: #2c3e50;
             font-size: 13px;
+            min-width: 110px;
+            white-space: nowrap;
         }
 
         input {
@@ -592,7 +596,12 @@
 
                 <div class="form-group">
                     <label for="litros">Litros repostados</label>
-                    <input type="number" id="litros" placeholder="45.5" step="0.1">
+                    <input type="number" id="litros" placeholder="45.5" step="0.1" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="precio">€/litro</label>
+                    <input type="number" id="precio" placeholder="1.659" step="0.001" min="0">
                 </div>
 
                 <div class="consumption-display empty" id="consumptionDisplay">
@@ -631,6 +640,22 @@
                         <div class="stat-card">
                             <div class="stat-label">Total litros</div>
                             <div class="stat-value" id="statLitros">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Gasto total</div>
+                            <div class="stat-value" id="statGasto">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">€/litro medio</div>
+                            <div class="stat-value" id="statPrecioMedio">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total km</div>
+                            <div class="stat-value" id="statTotalKm">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Repostajes</div>
+                            <div class="stat-value" id="statRepostajes">-</div>
                         </div>
                     </div>
                 </div>
@@ -934,6 +959,10 @@
                 document.getElementById('statMax').textContent = '-';
                 document.getElementById('statMin').textContent = '-';
                 document.getElementById('statLitros').textContent = '-';
+                document.getElementById('statGasto').textContent = '-';
+                document.getElementById('statPrecioMedio').textContent = '-';
+                document.getElementById('statTotalKm').textContent = '-';
+                document.getElementById('statRepostajes').textContent = '-';
                 return;
             }
 
@@ -946,6 +975,14 @@
             document.getElementById('statMax').textContent = maximo.toFixed(2) + ' l/100km';
             document.getElementById('statMin').textContent = minimo.toFixed(2) + ' l/100km';
             document.getElementById('statLitros').textContent = totalLitros.toFixed(1) + ' L';
+            const totalGasto = data.reduce((sum, d) => sum + (d.coste || 0), 0);
+            const conPrecio = data.filter(d => d.precio);
+            const precioMedio = conPrecio.length > 0 ? conPrecio.reduce((sum, d) => sum + d.precio, 0) / conPrecio.length : 0;
+            document.getElementById('statGasto').textContent = totalGasto > 0 ? totalGasto.toFixed(2) + ' €' : '-';
+            document.getElementById('statPrecioMedio').textContent = precioMedio > 0 ? precioMedio.toFixed(3) + ' €/L' : '-';
+            const totalKm = data.length > 1 ? data[data.length - 1].km - data[0].km : 0;
+            document.getElementById('statTotalKm').textContent = totalKm > 0 ? totalKm + ' km' : '-';
+            document.getElementById('statRepostajes').textContent = data.length;
             // Mostrar el último consumo guardado cuando el formulario está vacío
             const kmInput = document.getElementById('km').value;
             const litrosInput = document.getElementById('litros').value;
@@ -1020,6 +1057,7 @@
             const fecha = document.getElementById('fecha').value;
             const km = parseFloat(document.getElementById('km').value);
             const litros = parseFloat(document.getElementById('litros').value);
+            const precio = parseFloat(document.getElementById('precio').value) || null;
 
             if (!fecha || !km || !litros || km <= 0 || litros <= 0) {
                 alert('Por favor, rellena todos los campos correctamente');
@@ -1065,7 +1103,9 @@
                 fecha,
                 km,
                 litros,
-                consumo: consumo ? parseFloat(consumo.toFixed(2)) : null
+                consumo: consumo ? parseFloat(consumo.toFixed(2)) : null,
+                precio,
+                coste: (precio && litros) ? parseFloat((precio * litros).toFixed(2)) : null
             };
 
             data.push(entry);
@@ -1074,6 +1114,7 @@
             // Limpiar formulario
             document.getElementById('km').value = '';
             document.getElementById('litros').value = '';
+            document.getElementById('precio').value = '';
             setCurrentDate();
             showConsumption(consumo);
 
@@ -1141,8 +1182,7 @@
                         <div class="history-item-content">
                             <div class="history-info">
                                 <div class="history-date">${formatDate(entry.fecha)}</div>
-                                <div class="history-details">${entry.km} km • ${entry.litros} L</div>
-                            </div>
+<div class="history-details">${entry.km} km • ${entry.litros} L${entry.precio ? ' • ' + entry.precio.toFixed(3) + ' €/L' : ''}${entry.coste ? ' • ' + entry.coste.toFixed(2) + ' €' : ''}</div>                            </div>
                             <div class="history-consumption">${entry.consumo ? entry.consumo.toFixed(2) + ' l/100km' : '-'}</div>
                         </div>
                     </div>
@@ -1315,32 +1355,6 @@
             const statsHTML = `
                 <div class="chart-container">
                     <canvas id="consumptionChart"></canvas>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Consumo promedio</div>
-                        <div class="stat-value">${promedio.toFixed(2)} l/100km</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Consumo máximo</div>
-                        <div class="stat-value">${maximo.toFixed(2)} l/100km</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Consumo mínimo</div>
-                        <div class="stat-value">${minimo.toFixed(2)} l/100km</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Total litros</div>
-                        <div class="stat-value">${totalLitros.toFixed(1)} L</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Total km</div>
-                        <div class="stat-value">${totalKm}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Repostajes</div>
-                        <div class="stat-value">${totalRepostajes}</div>
-                    </div>
                 </div>
             `;
 
