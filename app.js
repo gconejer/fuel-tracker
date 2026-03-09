@@ -830,33 +830,28 @@ function clearAllData() {
     }
 }
 
-// SERVICE WORKER (PWA)
+// SERVICE WORKER Y ESTADO DE CONEXIÓN
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        const sw = `
-            self.addEventListener('install', (e) => {
-                e.waitUntil(caches.open('fuel-tracker-v1').then((cache) => {
-                    return cache.addAll(['/']);
-                }));
-            });
-
-            self.addEventListener('fetch', (e) => {
-                e.respondWith(
-                    caches.match(e.request).then((res) => {
-                        return res || fetch(e.request);
-                    }).catch(() => {
-                        return caches.match(e.request);
-                    })
-                );
-            });
-        `;
-
-        const blob = new Blob([sw], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-
-        navigator.serviceWorker.register(swUrl).catch(() => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {
             // Service Worker opcional
         });
+    }
+
+    // Estado inicial
+    updateOnlineStatus();
+
+    // Escuchar cambios de conexión
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+}
+
+function updateOnlineStatus() {
+    const banner = document.getElementById('offlineBanner');
+    if (navigator.onLine) {
+        banner.classList.remove('visible');
+    } else {
+        banner.classList.add('visible');
     }
 }
 
