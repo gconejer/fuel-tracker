@@ -2,6 +2,7 @@
 const DB_KEY = 'fuelTrackerData';
 const STORAGE_KEY = 'fuelTrackerItems';
 let chart = null;
+let monthlyChart = null;
 let currentFilter = 'all';
 
 // INICIALIZACIÓN
@@ -663,13 +664,18 @@ function renderStats() {
         <div class="chart-container">
             <canvas id="consumptionChart"></canvas>
         </div>
+        <div class="chart-container">
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-heading); margin-bottom: 10px;">💰 Gasto mensual</div>
+            <canvas id="monthlySpendChart"></canvas>
+        </div>
     `;
 
     document.getElementById('statsContainer').innerHTML = statsHTML;
 
-    // Renderizar gráfica
+    // Renderizar gráficas
     setTimeout(() => {
         renderChart(data);
+        renderMonthlySpendChart(data);
     }, 100);
 }
 
@@ -718,6 +724,78 @@ function renderChart(data) {
                     ticks: {
                         callback: function (value) {
                             return value.toFixed(1);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderMonthlySpendChart(data) {
+    const ctx = document.getElementById('monthlySpendChart');
+    if (!ctx) return;
+
+    // Agrupar gastos por mes
+    const monthlyData = {};
+    data.forEach(d => {
+        if (d.coste && d.coste > 0) {
+            const month = d.fecha.substring(0, 7); // "2026-03"
+            monthlyData[month] = (monthlyData[month] || 0) + d.coste;
+        }
+    });
+
+    const months = Object.keys(monthlyData).sort();
+    if (months.length === 0) {
+        ctx.parentElement.style.display = 'none';
+        return;
+    }
+
+    const labels = months.map(m => {
+        const [year, month] = m.split('-');
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return monthNames[parseInt(month) - 1] + ' ' + year.substring(2);
+    });
+    const values = months.map(m => parseFloat(monthlyData[m].toFixed(2)));
+
+    if (monthlyChart) {
+        monthlyChart.destroy();
+    }
+
+    monthlyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Gasto (€)',
+                data: values,
+                backgroundColor: 'rgba(118, 75, 162, 0.7)',
+                borderColor: '#764ba2',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + ' €';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' €';
                         }
                     }
                 }
@@ -830,28 +908,33 @@ function clearAllData() {
     }
 }
 
-// SERVICE WORKER Y ESTADO DE CONEXIÓN
+// SERVICE WORKER (PWA)
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {
+        const sw = `
+            self.addEventListener('install', (e) => {
+                e.waitUntil(caches.open('fuel-tracker-v1').then((cache) => {
+                    return cache.addAll(['/']);
+                }));
+            });
+
+            self.addEventListener('fetch', (e) => {
+                e.respondWith(
+                    caches.match(e.request).then((res) => {
+                        return res || fetch(e.request);
+                    }).catch(() => {
+                        return caches.match(e.request);
+                    })
+                );
+            });
+        `;
+
+        const blob = new Blob([sw], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+
+        navigator.serviceWorker.register(swUrl).catch(() => {
             // Service Worker opcional
         });
-    }
-
-    // Estado inicial
-    updateOnlineStatus();
-
-    // Escuchar cambios de conexión
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-}
-
-function updateOnlineStatus() {
-    const banner = document.getElementById('offlineBanner');
-    if (navigator.onLine) {
-        banner.classList.remove('visible');
-    } else {
-        banner.classList.add('visible');
     }
 }
 
