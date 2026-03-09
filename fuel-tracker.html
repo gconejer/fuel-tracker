@@ -152,11 +152,8 @@
                 <!-- IMPORTAR -->
                 <div class="settings-section">
                     <div class="settings-section-title">📥 Importar datos</div>
-                    <div class="file-input-wrapper">
-                        <label for="importFile" class="btn btn-secondary">Seleccionar archivo</label>
-                        <input type="file" id="importFile" accept=".json,.csv">
-                    </div>
-                    <button class="btn btn-secondary" id="importBtn">Cargar datos</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Importar archivo (JSON/CSV)</button>
+                    <input type="file" id="importFile" accept=".json,.csv" style="display: none;">
                 </div>
 
                 <!-- EXPORTAR -->

@@ -44,8 +44,7 @@ function attachEventListeners() {
     document.getElementById('saveBtn').addEventListener('click', saveEntry);
 
     // Importar/Exportar
-    document.getElementById('importFile').addEventListener('change', handleFileSelect);
-    document.getElementById('importBtn').addEventListener('click', importData);
+    document.getElementById('importFile').addEventListener('change', importData);
     document.getElementById('exportJsonBtn').addEventListener('click', () => exportData('json'));
     document.getElementById('exportCsvBtn').addEventListener('click', () => exportData('csv'));
     document.getElementById('clearBtn').addEventListener('click', clearAllData);
@@ -191,7 +190,6 @@ function updateMainStats() {
         document.getElementById('statPrecioMedio').textContent = '-';
         document.getElementById('statTotalKm').textContent = '-';
         document.getElementById('statRepostajes').textContent = '-';
-        document.getElementById('statCosteKm').textContent = '-';
         return;
     }
 
@@ -212,8 +210,6 @@ function updateMainStats() {
     const totalKm = data.length > 1 ? data[data.length - 1].km - data[0].km : 0;
     document.getElementById('statTotalKm').textContent = totalKm > 0 ? totalKm + ' km' : '-';
     document.getElementById('statRepostajes').textContent = data.length;
-    const costeKm = (totalGasto > 0 && totalKm > 0) ? (totalGasto / totalKm) : 0;
-    document.getElementById('statCosteKm').textContent = costeKm > 0 ? costeKm.toFixed(3) + ' €/km' : '-';
     // Mostrar el último consumo guardado cuando el formulario está vacío
     const kmInput = document.getElementById('km').value;
     const litrosInput = document.getElementById('litros').value;
@@ -451,6 +447,8 @@ function displayHistory(data) {
         }, false);
 
         item.addEventListener('touchend', (e) => {
+            // No cerrar swipe si se tocó la papelera
+            if (e.target.closest('.history-item-delete-bg')) return;
             const currentX = e.changedTouches[0].clientX;
             const diff = startX - currentX;
 
@@ -459,7 +457,18 @@ function displayHistory(data) {
             }
         }, false);
 
-        item.querySelector('.history-item-delete-bg').addEventListener('click', () => {
+        item.querySelector('.history-item-delete-bg').addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+        });
+        item.querySelector('.history-item-delete-bg').addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (confirm('¿Deseas eliminar este repostaje?')) {
+                deleteEntry(item.dataset.id);
+            }
+        });
+        item.querySelector('.history-item-delete-bg').addEventListener('click', (e) => {
+            e.stopPropagation();
             if (confirm('¿Deseas eliminar este repostaje?')) {
                 deleteEntry(item.dataset.id);
             }
@@ -718,26 +727,18 @@ function renderChart(data) {
 }
 
 // IMPORTAR DATOS
-let selectedFile = null;
-
-function handleFileSelect(e) {
-    selectedFile = e.target.files[0];
-}
-
 function importData() {
-    if (!selectedFile) {
-        alert('Por favor, selecciona un archivo primero');
-        return;
-    }
+    const file = document.getElementById('importFile').files[0];
+    if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
             let data = [];
 
-            if (selectedFile.name.endsWith('.json')) {
+            if (file.name.endsWith('.json')) {
                 data = JSON.parse(e.target.result);
-            } else if (selectedFile.name.endsWith('.csv')) {
+            } else if (file.name.endsWith('.csv')) {
                 data = parseCSV(e.target.result);
             } else {
                 alert('Formato no soportado. Usa JSON o CSV');
@@ -753,15 +754,14 @@ function importData() {
             data = recalculateConsumptions(data);
             saveData(data);
             loadData();
-            showMain();
+            renderStats();
             alert(`${data.length} repostajes importados ✓`);
-            selectedFile = null;
             document.getElementById('importFile').value = '';
         } catch (error) {
             alert('Error al importar: ' + error.message);
         }
     };
-    reader.readAsText(selectedFile);
+    reader.readAsText(file);
 }
 
 function parseCSV(csv) {
