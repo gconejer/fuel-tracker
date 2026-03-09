@@ -191,6 +191,7 @@ function updateMainStats() {
         document.getElementById('statPrecioMedio').textContent = '-';
         document.getElementById('statTotalKm').textContent = '-';
         document.getElementById('statRepostajes').textContent = '-';
+        document.getElementById('statCosteKm').textContent = '-';
         return;
     }
 
@@ -211,6 +212,8 @@ function updateMainStats() {
     const totalKm = data.length > 1 ? data[data.length - 1].km - data[0].km : 0;
     document.getElementById('statTotalKm').textContent = totalKm > 0 ? totalKm + ' km' : '-';
     document.getElementById('statRepostajes').textContent = data.length;
+    const costeKm = (totalGasto > 0 && totalKm > 0) ? (totalGasto / totalKm) : 0;
+    document.getElementById('statCosteKm').textContent = costeKm > 0 ? costeKm.toFixed(3) + ' €/km' : '-';
     // Mostrar el último consumo guardado cuando el formulario está vacío
     const kmInput = document.getElementById('km').value;
     const litrosInput = document.getElementById('litros').value;
@@ -448,8 +451,6 @@ function displayHistory(data) {
         }, false);
 
         item.addEventListener('touchend', (e) => {
-            // No cerrar swipe si se tocó la papelera
-            if (e.target.closest('.history-item-delete-bg')) return;
             const currentX = e.changedTouches[0].clientX;
             const diff = startX - currentX;
 
@@ -458,8 +459,7 @@ function displayHistory(data) {
             }
         }, false);
 
-        item.querySelector('.history-item-delete-bg').addEventListener('click', (e) => {
-            e.stopPropagation();
+        item.querySelector('.history-item-delete-bg').addEventListener('click', () => {
             if (confirm('¿Deseas eliminar este repostaje?')) {
                 deleteEntry(item.dataset.id);
             }
