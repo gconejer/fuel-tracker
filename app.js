@@ -908,33 +908,47 @@ function clearAllData() {
     }
 }
 
-// SERVICE WORKER (PWA)
+// SERVICE WORKER Y ESTADO DE CONEXIÓN
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        const sw = `
-            self.addEventListener('install', (e) => {
-                e.waitUntil(caches.open('fuel-tracker-v1').then((cache) => {
-                    return cache.addAll(['/']);
-                }));
+        // Desregistrar cualquier SW antiguo basado en blob
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(reg => {
+                if (reg.active && reg.active.scriptURL.startsWith('blob:')) {
+                    reg.unregister();
+                }
             });
+        });
 
-            self.addEventListener('fetch', (e) => {
-                e.respondWith(
-                    caches.match(e.request).then((res) => {
-                        return res || fetch(e.request);
-                    }).catch(() => {
-                        return caches.match(e.request);
-                    })
-                );
+        // Registrar el nuevo SW externo
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+            // Forzar actualización si hay nueva versión
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'activated') {
+                        window.location.reload();
+                    }
+                });
             });
-        `;
-
-        const blob = new Blob([sw], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-
-        navigator.serviceWorker.register(swUrl).catch(() => {
+        }).catch(() => {
             // Service Worker opcional
         });
+    }
+
+    // Estado de conexión
+    updateOnlineStatus();
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+}
+
+function updateOnlineStatus() {
+    const banner = document.getElementById('offlineBanner');
+    if (!banner) return;
+    if (navigator.onLine) {
+        banner.classList.remove('visible');
+    } else {
+        banner.classList.add('visible');
     }
 }
 
