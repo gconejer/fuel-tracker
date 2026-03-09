@@ -458,16 +458,6 @@ function displayHistory(data) {
             }
         }, false);
 
-        item.querySelector('.history-item-delete-bg').addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-        });
-        item.querySelector('.history-item-delete-bg').addEventListener('touchend', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            if (confirm('¿Deseas eliminar este repostaje?')) {
-                deleteEntry(item.dataset.id);
-            }
-        });
         item.querySelector('.history-item-delete-bg').addEventListener('click', (e) => {
             e.stopPropagation();
             if (confirm('¿Deseas eliminar este repostaje?')) {
