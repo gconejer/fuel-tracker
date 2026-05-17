@@ -47,7 +47,20 @@
                     <input type="number" id="precio" placeholder="1.659" step="0.001" min="0">
                 </div>
 
+                <div class="form-group">
+                    <label for="lleno">Depósito lleno</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="lleno" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="partial-indicator" id="partialIndicator">
+                    <span class="partial-dot"></span> Último repostaje parcial
+                </div>
+
                 <div class="consumption-display empty" id="consumptionDisplay">
+                    <div class="consumption-label">Consumo medio</div>
                     <div class="consumption-value" id="consumptionValue">-</div>
                     <div class="consumption-unit">l/100km</div>
                 </div>
@@ -190,9 +203,16 @@
                             <li><strong>Km actuales:</strong> Los kilómetros que marca el cuentakilómetros de tu
                                 vehículo</li>
                             <li><strong>Litros repostados:</strong> La cantidad de combustible que has repostado</li>
+                            <li><strong>Depósito lleno:</strong> Indica si has llenado el depósito hasta arriba</li>
                         </ul>
-                        <p>El consumo se calcula automáticamente en l/100km. Toca "Guardar repostaje" para guardarlo.
+                        <p>El consumo medio se calcula automáticamente en l/100km. Toca "Guardar repostaje" para guardarlo.
                         </p>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>🟠 Repostaje parcial</h3>
+                        <p>Si no llevas el depósito siempre al mismo nivel, el consumo medio puede verse afectado. Cuando el último repostaje registrado fue parcial (toggle "Depósito lleno" desactivado), aparece un punto naranja con el aviso <strong>Último repostaje parcial</strong>.</p>
+                        <p>El consumo medio se calcula siempre sobre el total de litros y kilómetros desde el primer registro, independientemente de si los repostajes fueron completos o parciales.</p>
                     </div>
 
                     <div class="help-section">
@@ -283,6 +303,13 @@
             <div class="form-group">
                 <label for="editPrecio">€/litro</label>
                 <input type="number" id="editPrecio" placeholder="1.659" step="0.001" min="0">
+            </div>
+            <div class="form-group">
+                <label for="editLleno">Depósito lleno</label>
+                <label class="toggle">
+                    <input type="checkbox" id="editLleno" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>

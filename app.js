@@ -136,30 +136,29 @@ function backToSettings() {
     document.getElementById('settingsScreen').classList.add('active');
 }
 
-// CÁLCULO DE CONSUMO
+// CÁLCULO DE CONSUMO MEDIO GLOBAL
+function getGlobalAverage(data) {
+    if (data.length < 2) return null;
+    const totalLitros = data.reduce((sum, d) => sum + d.litros, 0);
+    const kmDiff = data[data.length - 1].km - data[0].km;
+    if (kmDiff <= 0) return null;
+    return (totalLitros * 100) / kmDiff;
+}
+
 function calculateConsumption() {
     const km = parseFloat(document.getElementById('km').value);
+    const data = getAllData();
 
-    if (km && km > 0) {
-        const data = getAllData();
-        if (data.length === 0) {
-            showConsumption(null);
+    if (km && km > 0 && data.length > 0) {
+        const totalLitros = data.reduce((sum, d) => sum + d.litros, 0);
+        const kmDiff = km - data[0].km;
+        if (kmDiff > 0) {
+            showConsumption((totalLitros * 100) / kmDiff);
             return;
         }
-
-        const lastEntry = data[data.length - 1];
-        const kmDiff = km - lastEntry.km;
-
-        if (kmDiff <= 0 || !lastEntry.litros) {
-            showConsumption(null);
-            return;
-        }
-
-        const consumo = (lastEntry.litros * 100) / kmDiff;
-        showConsumption(consumo);
-    } else {
-        showConsumption(null);
     }
+
+    showConsumption(getGlobalAverage(data));
 }
 
 function showConsumption(value) {
@@ -212,12 +211,17 @@ function updateMainStats() {
     document.getElementById('statRepostajes').textContent = data.length;
     const costeKm = (totalGasto > 0 && totalKm > 0) ? (totalGasto / totalKm) : 0;
     document.getElementById('statCosteKm').textContent = costeKm > 0 ? costeKm.toFixed(3) + ' €/km' : '-';
-    // Mostrar el último consumo guardado cuando el formulario está vacío
+    // Mostrar consumo medio global cuando el formulario está vacío
     const kmInput = document.getElementById('km').value;
-    const litrosInput = document.getElementById('litros').value;
-    if (!kmInput && !litrosInput) {
-        const lastWithConsumo = [...data].reverse().find(d => d.consumo !== null);
-        showConsumption(lastWithConsumo ? lastWithConsumo.consumo : null);
+    if (!kmInput) {
+        showConsumption(getGlobalAverage(data));
+    }
+
+    // Indicador de repostaje parcial
+    const lastEntry = data.length > 0 ? data[data.length - 1] : null;
+    const partialEl = document.getElementById('partialIndicator');
+    if (partialEl) {
+        partialEl.classList.toggle('visible', !!(lastEntry && lastEntry.lleno === false));
     }
 
     // Actualizar alertas de anomalías
@@ -287,6 +291,7 @@ function saveEntry() {
     const km = parseFloat(document.getElementById('km').value);
     const litros = parseFloat(document.getElementById('litros').value);
     const precio = parseFloat(document.getElementById('precio').value) || null;
+    const lleno = document.getElementById('lleno').checked;
 
     if (!fecha || !km || !litros || km <= 0 || litros <= 0) {
         alert('Por favor, rellena todos los campos correctamente');
@@ -334,7 +339,8 @@ function saveEntry() {
         litros,
         consumo: consumo ? parseFloat(consumo.toFixed(2)) : null,
         precio,
-        coste: (precio && litros) ? parseFloat((precio * litros).toFixed(2)) : null
+        coste: (precio && litros) ? parseFloat((precio * litros).toFixed(2)) : null,
+        lleno
     };
 
     data.push(entry);
@@ -501,6 +507,7 @@ function openEditModal(entryId) {
     document.getElementById('editKm').value = entry.km;
     document.getElementById('editLitros').value = entry.litros;
     document.getElementById('editPrecio').value = entry.precio || '';
+    document.getElementById('editLleno').checked = entry.lleno !== false;
     document.getElementById('editModal').classList.add('active');
 }
 
@@ -514,6 +521,7 @@ function saveEdit() {
     const km = parseFloat(document.getElementById('editKm').value);
     const litros = parseFloat(document.getElementById('editLitros').value);
     const precio = parseFloat(document.getElementById('editPrecio').value) || null;
+    const lleno = document.getElementById('editLleno').checked;
 
     if (!fecha || !km || !litros || km <= 0 || litros <= 0) {
         alert('Por favor, rellena todos los campos correctamente');
@@ -529,6 +537,7 @@ function saveEdit() {
     data[index].litros = litros;
     data[index].precio = precio;
     data[index].coste = (precio && litros) ? parseFloat((precio * litros).toFixed(2)) : null;
+    data[index].lleno = lleno;
 
     // Reordenar por fecha y km por si se cambió la fecha
     data.sort((a, b) => new Date(a.fecha) - new Date(b.fecha) || a.km - b.km);
