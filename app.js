@@ -41,7 +41,6 @@ function attachEventListeners() {
 
     // Formulario
     document.getElementById('km').addEventListener('input', calculateConsumption);
-    document.getElementById('litros').addEventListener('input', calculateConsumption);
     document.getElementById('saveBtn').addEventListener('click', saveEntry);
 
     // Importar/Exportar
@@ -140,9 +139,8 @@ function backToSettings() {
 // CÁLCULO DE CONSUMO
 function calculateConsumption() {
     const km = parseFloat(document.getElementById('km').value);
-    const litros = parseFloat(document.getElementById('litros').value);
 
-    if (km && litros && km > 0 && litros > 0) {
+    if (km && km > 0) {
         const data = getAllData();
         if (data.length === 0) {
             showConsumption(null);
@@ -152,12 +150,12 @@ function calculateConsumption() {
         const lastEntry = data[data.length - 1];
         const kmDiff = km - lastEntry.km;
 
-        if (kmDiff <= 0) {
+        if (kmDiff <= 0 || !lastEntry.litros) {
             showConsumption(null);
             return;
         }
 
-        const consumo = (litros * 100) / kmDiff;
+        const consumo = (lastEntry.litros * 100) / kmDiff;
         showConsumption(consumo);
     } else {
         showConsumption(null);
@@ -324,8 +322,8 @@ function saveEntry() {
     if (data.length > 0) {
         const lastEntry = data[data.length - 1];
         const kmDiff = km - lastEntry.km;
-        if (kmDiff > 0) {
-            consumo = (litros * 100) / kmDiff;
+        if (kmDiff > 0 && lastEntry.litros) {
+            consumo = (lastEntry.litros * 100) / kmDiff;
         }
     }
 
@@ -369,8 +367,8 @@ function recalculateConsumptions(data) {
         const previous = data[i - 1];
 
         const kmDiff = current.km - previous.km;
-        if (kmDiff > 0 && current.litros > 0) {
-            current.consumo = parseFloat(((current.litros * 100) / kmDiff).toFixed(2));
+        if (kmDiff > 0 && previous.litros > 0) {
+            current.consumo = parseFloat(((previous.litros * 100) / kmDiff).toFixed(2));
         } else {
             current.consumo = null;
         }
